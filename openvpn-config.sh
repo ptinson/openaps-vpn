@@ -87,9 +87,6 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 			1)
 			echo ""
 			echo "Choosing a random client name..."
-			#echo "Please, use one word only, no special characters"
-			#read -p "Client name: " -e -i client CLIENT
-			#CLIENT=$(date +%s | sha256sum | base64 | head -c 8)
 			cd /etc/openvpn/easy-rsa/
 			./easyrsa build-client-full $CLIENT nopass
 			# Generates the custom client.ovpn
@@ -216,9 +213,6 @@ else
 	echo "   6) Verisign"
 	read -p "DNS [1-6]: " -e -i 1 DNS
 	echo ""
-	#echo "Finally, tell me your name for the client certificate"
-	#echo "Please, use one word only, no special characters"
-	#read -p "Client name: " -e -i client CLIENT
 	echo "Choosing a random client name..."
 	#CLIENT=$(date +%s | sha256sum | base64 | head -c 8)
 	echo ""
