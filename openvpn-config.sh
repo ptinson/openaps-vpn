@@ -43,20 +43,24 @@ else
 fi
 
 newclient () {
+	#Make sure we have the clients directory
+	if [ ! -d ../clients ]; then
+  	mkdir ../clients
+	fi
 	# Generates the custom client.ovpn
-	cp /etc/openvpn/client-common.txt ~/$1.ovpn
-	echo "<ca>" >> ~/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/ca.crt >> ~/$1.ovpn
-	echo "</ca>" >> ~/$1.ovpn
-	echo "<cert>" >> ~/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/issued/$1.crt >> ~/$1.ovpn
-	echo "</cert>" >> ~/$1.ovpn
-	echo "<key>" >> ~/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
-	echo "</key>" >> ~/$1.ovpn
-	echo "<tls-auth>" >> ~/$1.ovpn
-	cat /etc/openvpn/ta.key >> ~/$1.ovpn
-	echo "</tls-auth>" >> ~/$1.ovpn
+	cp /etc/openvpn/client-common.txt ../clients/$1.ovpn
+	echo "<ca>" >> ../clients/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/ca.crt >> ../clients/$1.ovpn
+	echo "</ca>" >> ../clients/$1.ovpn
+	echo "<cert>" >> ../clients/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/issued/$1.crt >> ../clients/$1.ovpn
+	echo "</cert>" >> ../clients/$1.ovpn
+	echo "<key>" >> ../clients/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/private/$1.key >> ../clients/$1.ovpn
+	echo "</key>" >> ../clients/$1.ovpn
+	echo "<tls-auth>" >> ../clients/$1.ovpn
+	cat /etc/openvpn/ta.key >> ../clients/$1.ovpn
+	echo "</tls-auth>" >> ../clients/$1.ovpn
 }
 
 # Try to get our IP from the system and fallback to the Internet.
@@ -92,7 +96,7 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 			# Generates the custom client.ovpn
 			newclient "$CLIENT"
 			echo ""
-			echo "Client $CLIENT added, configuration is available at" ~/"$CLIENT.ovpn"
+			echo "Client $CLIENT added, configuration is available at" ../clients/"$CLIENT.ovpn"
 			exit
 			;;
 			2)
@@ -406,7 +410,7 @@ verb 3" > /etc/openvpn/client-common.txt
 	echo ""
 	echo "Finished!"
 	echo ""
-	echo "Your client configuration is available at" ~/"$CLIENT.ovpn"
+	echo "Your client configuration is available at" ../clients/"$CLIENT.ovpn"
 	echo "If you want to add more clients, you simply need to run this script again!"
 	echo "Copy the ovpn file to the machine you want to the openvpn client on."
 fi
