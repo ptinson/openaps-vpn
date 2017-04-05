@@ -1,13 +1,7 @@
 #!/bin/bash
+# OpenVPN installer for Debian, Ubuntu and CentOS
 
-# This script will work on Debian, Ubuntu, CentOS. It isn't
-# This is used to install and manage an openvpn server as well as Generates
-# new config files for new clients.
-
-# When you have added a new client, copy the ovpn file to the client and run it
-# with the openvpn client like %> openvpn --config /path/to/the/ovpn/file
-# When that is successful we can set it up to run on boot if you want.
-
+# This largely comes from another script I dont recall the source of.
 
 # Detect Debian users running the script with "sh" instead of bash
 if readlink /proc/$$/exe | grep -qs "dash"; then
@@ -43,37 +37,28 @@ else
 fi
 
 newclient () {
-	#Make sure we have the clients directory
-	if [ ! -d ../clients ]; then
-  	mkdir ../clients
-	fi
 	# Generates the custom client.ovpn
-	cp /etc/openvpn/client-common.txt ../clients/$1.ovpn
-	echo "<ca>" >> ../clients/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/ca.crt >> ../clients/$1.ovpn
-	echo "</ca>" >> ../clients/$1.ovpn
-	echo "<cert>" >> ../clients/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/issued/$1.crt >> ../clients/$1.ovpn
-	echo "</cert>" >> ../clients/$1.ovpn
-	echo "<key>" >> ../clients/$1.ovpn
-	cat /etc/openvpn/easy-rsa/pki/private/$1.key >> ../clients/$1.ovpn
-	echo "</key>" >> ../clients/$1.ovpn
-	echo "<tls-auth>" >> ../clients/$1.ovpn
-	cat /etc/openvpn/ta.key >> ../clients/$1.ovpn
-	echo "</tls-auth>" >> ../clients/$1.ovpn
+	cp /etc/openvpn/client-common.txt ~/$1.ovpn
+	echo "<ca>" >> ~/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/ca.crt >> ~/$1.ovpn
+	echo "</ca>" >> ~/$1.ovpn
+	echo "<cert>" >> ~/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/issued/$1.crt >> ~/$1.ovpn
+	echo "</cert>" >> ~/$1.ovpn
+	echo "<key>" >> ~/$1.ovpn
+	cat /etc/openvpn/easy-rsa/pki/private/$1.key >> ~/$1.ovpn
+	echo "</key>" >> ~/$1.ovpn
+	echo "<tls-auth>" >> ~/$1.ovpn
+	cat /etc/openvpn/ta.key >> ~/$1.ovpn
+	echo "</tls-auth>" >> ~/$1.ovpn
 }
 
 # Try to get our IP from the system and fallback to the Internet.
-# I do this to make the script compatible with NATed servers
 # and to avoid getting an IPv6.
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 if [[ "$IP" = "" ]]; then
 		IP=$(wget -4qO- "http://whatismyip.akamai.com/")
 fi
-
-# Generate a unique client name, should be OK but needs to be a little more
-# robust.
-CLIENT=$(date +%s | sha256sum | base64 | head -c 8)
 
 if [[ -e /etc/openvpn/server.conf ]]; then
 	while :
@@ -90,13 +75,15 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 		case $option in
 			1)
 			echo ""
-			echo "Choosing a random client name..."
+			echo "Tell me a name for the client certificate"
+			echo "Please, use one word only, no special characters"
+			read -p "Client name: " -e -i client CLIENT
 			cd /etc/openvpn/easy-rsa/
 			./easyrsa build-client-full $CLIENT nopass
 			# Generates the custom client.ovpn
 			newclient "$CLIENT"
 			echo ""
-			echo "Client $CLIENT added, configuration is available at" ../clients/"$CLIENT.ovpn"
+			echo "Client $CLIENT added, configuration is available at" ~/"$CLIENT.ovpn"
 			exit
 			;;
 			2)
@@ -182,7 +169,7 @@ if [[ -e /etc/openvpn/server.conf ]]; then
 	done
 else
 	clear
-	echo 'Welcome to this OpenVPN installer'
+	echo 'Welcome to this quick OpenVPN installer'
 	echo ""
 	# OpenVPN setup and first user creation
 	echo "I need to ask you a few questions before starting the setup"
@@ -217,8 +204,9 @@ else
 	echo "   6) Verisign"
 	read -p "DNS [1-6]: " -e -i 1 DNS
 	echo ""
-	echo "Choosing a random client name..."
-	#CLIENT=$(date +%s | sha256sum | base64 | head -c 8)
+	echo "Finally, tell me your name for the client certificate"
+	echo "Please, use one word only, no special characters"
+	read -p "Client name: " -e -i client CLIENT
 	echo ""
 	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now"
 	read -n1 -r -p "Press any key to continue..."
@@ -374,13 +362,13 @@ exit 0' > $RCLOCAL
 			chkconfig openvpn on
 		fi
 	fi
-	# Try to detect a NATed connection and ask about it
+	# Try to detect a NATed connection and ask about it to potential LowEndSpirit users
 	EXTERNALIP=$(wget -4qO- "http://whatismyip.akamai.com/")
 	if [[ "$IP" != "$EXTERNALIP" ]]; then
 		echo ""
 		echo "Looks like your server is behind a NAT!"
 		echo ""
-		echo "If your server is NATed, I need to know the external IP"
+		echo "If your server is NATed (e.g. LowEndSpirit), I need to know the external IP"
 		echo "If that's not the case, just ignore this and leave the next field blank"
 		read -p "External IP: " -e USEREXTERNALIP
 		if [[ "$USEREXTERNALIP" != "" ]]; then
@@ -404,13 +392,14 @@ cipher AES-256-CBC
 comp-lzo
 setenv opt block-outside-dns
 key-direction 1
-verb 3" > /etc/openvpn/client-common.txt
+verb 3
+auth-user-pass
+reneg-sec 0" > /etc/openvpn/client-common.txt
 	# Generates the custom client.ovpn
 	newclient "$CLIENT"
 	echo ""
 	echo "Finished!"
 	echo ""
-	echo "Your client configuration is available at" ../clients/"$CLIENT.ovpn"
+	echo "Your client configuration is available at" ~/"$CLIENT.ovpn"
 	echo "If you want to add more clients, you simply need to run this script again!"
-	echo "Copy the ovpn file to the machine you want to the openvpn client on."
 fi
