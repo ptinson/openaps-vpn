@@ -21,7 +21,7 @@ This document needs a lot of tidy up...
 
 If you already have a server you want to use then skip to [Installing](#Installing).
 
-I currntly use [Digital Ocean](https://www.digitalocean.com/) for my servers.  
+I currently use [Digital Ocean](https://www.digitalocean.com/) for my servers.  
 You can run a simple OpenVPN server on the $10 / Month machines.  
 Both Ubuntu and CentOS images are available.
 
@@ -77,7 +77,8 @@ For example this could be your [OpenAPS](https://openaps.org) rig.
  > `/etc/openvpn/<clientname.conf>`
 
 + Edit the default config for openvpn:
- + `$> vi /etc/default/openvpn`
+ > `$> vi /etc/default/openvpn`
+
  + Change this line `# AUTOSTART="all"` to `AUTOSTART="all"` to allow the OpenVPN server to automatically start the connection to your VPN server.
 
 
@@ -91,7 +92,7 @@ For example this could be your [OpenAPS](https://openaps.org) rig.
  `PING 10.8.0.1 (10.8.0.1) 56(84) bytes of data.`  
  `64 bytes from 10.8.0.1: icmp_seq=1 ttl=64 time=141 ms`
 
- + Also take a not of your VPN ipaddress:  
+ + Also take a note of your VPN ipaddress:  
  You should see an interface called `tun0:` and look for `inet addr:10.8.0.2`
 
 ### Mac OS as a client
